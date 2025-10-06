@@ -144,6 +144,11 @@ public class GenjiData {
         bladeEndingPlayed = false;
         bladeSwingStartupTicks = 0;
         bladeSwingRecoverTicks = 0;
+        bladeNextRight = false; // Always start with LEFT swing
+        
+        // Reset dash cooldown when dragonblade activates
+        resetDashCooldown();
+        
         dirty = true;
     }
 
@@ -177,6 +182,7 @@ public class GenjiData {
     public boolean isNextSwingRight()   { return bladeNextRight; }
     public boolean nextSwingIsRight()   { return bladeNextRight; }
     public void setNextSwingRight(boolean v){ bladeNextRight = v; dirty = true; }
+    public void resetSwingToLeft()      { bladeNextRight = false; dirty = true; }
 
     public int  getSwingStartupTicks()  { return bladeSwingStartupTicks; }
     public int  getSwingRecoverTicks()  { return bladeSwingRecoverTicks; }

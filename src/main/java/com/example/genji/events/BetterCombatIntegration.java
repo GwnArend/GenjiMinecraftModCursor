@@ -14,30 +14,22 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Integration with Better Combat's attack system.
- * Intercepts Better Combat's attack events to apply our custom logic.
+ * Integration with Better Combat mod.
+ * Better Combat provides the static katana pose when holding the dragonblade.
+ * ALL swing animations and timing are handled by DragonbladeCombat system.
  */
 @Mod.EventBusSubscriber(modid = GenjiMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class BetterCombatIntegration {
 
-    @SubscribeEvent(priority = EventPriority.HIGH)
-    public static void onLivingAttack(LivingAttackEvent event) {
-        // Check if the attacker is a player with dragonblade active
-        if (!(event.getSource().getEntity() instanceof ServerPlayer sp)) return;
-        
-        var data = GenjiDataProvider.get(sp);
-        if (!data.isBladeActive()) return;
-        
-        // Check if the player is holding a dragonblade
-        ItemStack mainHand = sp.getMainHandItem();
-        if (mainHand.isEmpty() || !(mainHand.getItem() instanceof DragonbladeItem)) return;
-        
-        // Apply our custom logic when Better Combat triggers an attack
-        // Update our timing system
-        boolean rightToLeft = data.nextSwingIsRight();
-        data.setNextSwingRight(!rightToLeft);
-        
-        // Let Better Combat handle the rest (animations, damage, sweeping edge)
-        // Sound is already played by our main system
-    }
+    // NOTE: Better Combat integration is PASSIVE - it only provides the static katana pose.
+    // The weapon_attributes/dragonblade.json file tells Better Combat to use katana animations.
+    // 
+    // We do NOT override any attack events here because that was causing double-toggling
+    // of swing direction when hitting mobs (air swings worked, mob hits glitched).
+    //
+    // DragonbladeCombat.perPlayerTick() is the SINGLE source of truth for:
+    // - Swing direction (LEFT/RIGHT)
+    // - Combo window timing
+    // - Animation triggering
+    // - Damage application
 }

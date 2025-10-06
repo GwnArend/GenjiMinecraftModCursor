@@ -131,15 +131,17 @@ public class DragonbladeItem extends SwordItem implements GeoItem {
             
             // Force reset on edges for stable restart
             if (want == Phase.DASH && FPDashAnim.justStarted()) {
-                System.out.println("DragonbladeItem hand_ctrl: DASH justStarted, forcing animation reset and phase reset");
                 state.getController().forceAnimationReset();
                 item.handPhase = Phase.NONE; // Force phase reset to ensure setClip is called
             } else if (isDeflectPhase(want) && (FPDeflectAnim.justStarted() || FPDeflectAnim.justHit() || FPDeflectAnim.justEnded())) {
                 state.getController().forceAnimationReset();
+            } else if ((want == Phase.SWING_L || want == Phase.SWING_R) && DragonbladeFPAnim.justStarted()) {
+                // Force reset when a new swing starts, even if it's the same direction
+                state.getController().forceAnimationReset();
+                item.handPhase = Phase.NONE; // Force phase reset to ensure setClip is called
             }
             
             if (want != item.handPhase) { 
-                System.out.println("DragonbladeItem hand_ctrl: Phase changed from " + item.handPhase + " to " + want);
                 setClip(state, want); 
                 item.handPhase = want; 
             }
@@ -150,15 +152,17 @@ public class DragonbladeItem extends SwordItem implements GeoItem {
             Phase want = currentPhase();
             
             if (want == Phase.DASH && FPDashAnim.justStarted()) {
-                System.out.println("DragonbladeItem blade_ctrl: DASH justStarted, forcing animation reset and phase reset");
                 state.getController().forceAnimationReset();
                 item.bladePhase = Phase.NONE; // Force phase reset to ensure setClip is called
             } else if (isDeflectPhase(want) && (FPDeflectAnim.justStarted() || FPDeflectAnim.justHit() || FPDeflectAnim.justEnded())) {
                 state.getController().forceAnimationReset();
+            } else if ((want == Phase.SWING_L || want == Phase.SWING_R) && DragonbladeFPAnim.justStarted()) {
+                // Force reset when a new swing starts, even if it's the same direction
+                state.getController().forceAnimationReset();
+                item.bladePhase = Phase.NONE; // Force phase reset to ensure setClip is called
             }
             
             if (want != item.bladePhase) { 
-                System.out.println("DragonbladeItem blade_ctrl: Phase changed from " + item.bladePhase + " to " + want);
                 setClip(state, want); 
                 item.bladePhase = want; 
             }
