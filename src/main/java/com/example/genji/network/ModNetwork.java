@@ -13,6 +13,7 @@ import com.example.genji.network.packet.S2CSyncGenjiData;
 import com.example.genji.network.packet.S2CShurikenFPAnim;
 import com.example.genji.network.packet.S2CPlayHitSound;
 import com.example.genji.network.packet.S2CPlayerPunchAnim;
+import com.example.genji.network.packet.S2CStartDash;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
@@ -104,6 +105,13 @@ public class ModNetwork {
                 .decoder(S2CPlayerPunchAnim::new)
                 .encoder(S2CPlayerPunchAnim::toBytes)
                 .consumerMainThread(S2CPlayerPunchAnim::handle)
+                .add();
+
+        // Smooth dash interpolation
+        CHANNEL.messageBuilder(S2CStartDash.class, id++, NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(S2CStartDash::new)
+                .encoder(S2CStartDash::toBytes)
+                .consumerMainThread(S2CStartDash::handle)
                 .add();
 
     }

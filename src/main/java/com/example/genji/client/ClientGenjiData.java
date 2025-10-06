@@ -1,6 +1,5 @@
 package com.example.genji.client;
 
-import com.example.genji.client.anim.FPDashAnim;
 import com.example.genji.client.anim.FPDeflectAnim;
 
 /**
@@ -37,7 +36,7 @@ public final class ClientGenjiData {
         ult = clamp01(u);
 
         if (dashStartedNow && sheathe > 0) suppressSheatheDueToDash = true;
-        if (dashStartedNow) FPDashAnim.start();
+        // NOTE: Dash animation is now triggered by S2CStartDash packet with correct duration
 
         if (deflectStartedNow) FPDeflectAnim.start();
         if (deflectEndedNow)   FPDeflectAnim.end();

@@ -72,12 +72,8 @@ public class C2SActivateDash {
                 data.setBladeSlot(-1); // so end-of-blade logic doesn't fight us later
             }
 
-            // Tell the client to play the 0.25s FP "dash" animation NOW
-            ModNetwork.CHANNEL.sendTo(
-                    new S2CFPDashAnim(),
-                    sp.connection.connection,
-                    NetworkDirection.PLAY_TO_CLIENT
-            );
+            // NOTE: Dash animation is now triggered by S2CStartDash packet with correct variable duration
+            // (DashAbility.startDash sends S2CStartDash which handles both interpolation and animation)
 
             // Sync HUD/FX right away (dashCooldown, etc.)
             ModNetwork.CHANNEL.sendTo(
