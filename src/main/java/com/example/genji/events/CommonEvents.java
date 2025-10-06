@@ -1,0 +1,276 @@
+package com.example.genji.events;
+
+import com.example.genji.GenjiMod;
+import com.example.genji.capability.GenjiDataProvider;
+import com.example.genji.config.GenjiConfig;
+import com.example.genji.content.DragonbladeItem;
+import com.example.genji.content.ShurikenEntity;
+import com.example.genji.network.ModNetwork;
+import com.example.genji.network.packet.S2CSyncGenjiData;
+import com.example.genji.network.packet.S2CPlayHitSound;
+import com.example.genji.registry.ModItems;
+import com.example.genji.registry.ModSounds;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+@Mod.EventBusSubscriber(modid = GenjiMod.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
+public class CommonEvents {
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent e) {
+        if (e.phase != TickEvent.Phase.END) return;
+        Player p = e.player;
+
+        p.getCapability(GenjiDataProvider.CAPABILITY).ifPresent(data -> {
+            int prevCast    = data.getBladeCastTicks();
+            int prevBlade   = data.getBladeTicks();
+            int prevSheathe = data.getBladeSheatheTicks();
+            boolean prevNano = data.isNanoActive();
+
+            // advance all timers once per tick
+            data.tick();
+            
+            // === Handle nanoboost ending (remove dragonblade enchantments)
+            if (prevNano && !data.isNanoActive() && data.isBladeActive() && p instanceof ServerPlayer sp) {
+                int bladeSlot = data.getBladeSlot();
+                if (bladeSlot >= 0 && bladeSlot < 9) {
+                    ItemStack bladeStack = sp.getInventory().getItem(bladeSlot);
+                    if (bladeStack.is(ModItems.DRAGONBLADE.get())) {
+                        DragonbladeItem.applyNanoboostEnchantments(bladeStack, false);
+                        sp.inventoryMenu.broadcastChanges();
+                    }
+                }
+            }
+
+            // === Nano-Boost: apply buffs while active (server-side)
+            if (!p.level().isClientSide && data.isNanoActive() && p instanceof ServerPlayer sp) {
+                int dur = 4; // reapply briefly each tick so effects persist
+                if (GenjiConfig.NANO_RESISTANCE_AMPLIFIER.get() >= 0)
+                    sp.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, dur, GenjiConfig.NANO_RESISTANCE_AMPLIFIER.get(),  false, false, true));
+                if (GenjiConfig.NANO_FIRE_RES_AMPLIFIER.get() >= 0)
+                    sp.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE,   dur, GenjiConfig.NANO_FIRE_RES_AMPLIFIER.get(),    false, false, true));
+                if (GenjiConfig.NANO_ABSORPTION_AMPLIFIER.get() >= 0)
+                    sp.addEffect(new MobEffectInstance(MobEffects.ABSORPTION,        dur, GenjiConfig.NANO_ABSORPTION_AMPLIFIER.get(),  false, false, true));
+
+                // one-shot: instant health on activation tick
+                if (data.nanoJustActivated()) {
+                    int amp = Math.max(0, GenjiConfig.NANO_INSTANT_HEALTH_AMPLIFIER.get());
+                    sp.addEffect(new MobEffectInstance(MobEffects.HEAL, 1, amp, false, false, true));
+                }
+            }
+
+            // === Speed Effects: Dragonblade + Nanoboost combined logic (server-side)
+            if (!p.level().isClientSide && p instanceof ServerPlayer sp) {
+                int dur = 4; // reapply briefly each tick so effects persist
+                boolean nanoActive = data.isNanoActive();
+                boolean bladeActive = data.isBladeActive();
+                
+                if (nanoActive && bladeActive) {
+                    // Both active: Speed 4 (amplifier 3)
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, dur, 3, false, false, true));
+                } else if (nanoActive) {
+                    // Only nanoboost: Speed 2 (amplifier 1)
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, dur, 1, false, false, true));
+                } else if (bladeActive) {
+                    // Only dragonblade: Speed 2 (amplifier 1)
+                    sp.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, dur, 1, false, false, true));
+                }
+            }
+
+            // === Blade CAST -> ACTIVE
+            if (prevCast > 0 && data.getBladeCastTicks() == 0 && data.getBladeTicks() == 0) {
+                data.activateBlade();
+
+                // Edge case: ending cue at start if total active <= 5s
+                final int fiveSeconds = 5 * 20;
+                int totalActive = GenjiConfig.secToTicksClamped(GenjiConfig.DRAGONBLADE_DURATION_SECONDS);
+                if (totalActive <= fiveSeconds && !data.bladeEndingPlayed() && p instanceof ServerPlayer spStart) {
+                    spStart.level().playSound(
+                            null, spStart.blockPosition(),
+                            ModSounds.DRAGONBLADE_ENDING.get(),
+                            SoundSource.PLAYERS, 1.0f, 1.0f
+                    );
+                    data.markBladeEndingPlayed();
+                }
+            }
+
+            // === Play ending SFX exactly 5s (100 ticks) before sheathing begins
+            final int fiveSeconds = 5 * 20;
+            if (!data.bladeEndingPlayed() && data.getBladeTicks() == fiveSeconds && fiveSeconds > 0) {
+                if (p instanceof ServerPlayer sp) {
+                    sp.level().playSound(
+                            null, sp.blockPosition(),
+                            ModSounds.DRAGONBLADE_ENDING.get(),
+                            SoundSource.PLAYERS, 1.0f, 1.0f
+                    );
+                }
+                data.markBladeEndingPlayed();
+            }
+
+            // === ACTIVE -> SHEATHE
+            if (prevBlade > 0 && data.getBladeTicks() == 0 && !data.isSheathing()) {
+                data.endBladeStartSheathe();
+            }
+
+            // === SHEATHE -> DONE: restore slot and swap dragonblade back to shurikens
+            if (prevSheathe > 0 && data.getBladeSheatheTicks() == 0 && p instanceof ServerPlayer spSheathe) {
+                // First, swap dragonblade item back to shurikens
+                int target = data.getBladeSlot();
+                if (target >= 0 && target < 9) {
+                    // Swap the dragonblade item back to shurikens in the remembered slot
+                    spSheathe.getInventory().setItem(target, new ItemStack(ModItems.SHURIKEN.get()));
+                    spSheathe.getInventory().selected = target;
+                } else {
+                    // Fallback: find dragonblade in hotbar and replace it with shurikens
+                    for (int i = 0; i < 9; i++) {
+                        ItemStack it = spSheathe.getInventory().getItem(i);
+                        if (!it.isEmpty() && it.is(ModItems.DRAGONBLADE.get())) {
+                            spSheathe.getInventory().setItem(i, new ItemStack(ModItems.SHURIKEN.get()));
+                            spSheathe.getInventory().selected = i;
+                            break;
+                        }
+                    }
+                }
+                spSheathe.inventoryMenu.broadcastChanges();
+                data.clearBladeSlot();
+            }
+
+            // === Drive Dragonblade combat loop + sync to client
+            if (p instanceof ServerPlayer sp) {
+                DragonbladeCombat.perPlayerTick(sp);
+
+                ModNetwork.CHANNEL.sendTo(
+                        new S2CSyncGenjiData(
+                                data.getUlt(),
+                                data.getNano(),
+                                data.getBladeTicks(),
+                                data.getDeflectTicks(),
+                                data.getDashCooldown(),
+                                data.getDeflectCooldown(),
+                                data.getBladeCastTicks(),
+                                data.getBladeSheatheTicks()
+                        ),
+                        sp.connection.connection,
+                        net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
+                );
+                data.markSynced();
+            }
+        });
+    }
+
+    @SubscribeEvent
+    public static void onEntityHurt(LivingHurtEvent e) {
+        System.out.println("onEntityHurt triggered - source: " + e.getSource().getMsgId() + ", entity: " + e.getSource().getEntity()); // Debug log
+        
+        // Attribute damage to a player (direct or projectile owner)
+        ServerPlayer attacker = null;
+        Entity srcEntity = e.getSource().getEntity();
+        if (srcEntity instanceof ServerPlayer sp) {
+            attacker = sp;
+            System.out.println("Attacker found: " + sp.getName()); // Debug log
+        } else {
+            Entity direct = e.getSource().getDirectEntity();
+            if (direct instanceof Projectile proj && proj.getOwner() instanceof ServerPlayer owner) {
+                attacker = owner;
+                System.out.println("Projectile attacker found: " + owner.getName()); // Debug log
+            }
+        }
+        if (attacker == null) {
+            System.out.println("No attacker found, returning"); // Debug log
+            return;
+        }
+
+        // Disable vanilla hitreg for shurikens only (dragonblade now uses vanilla sword mechanics)
+        boolean shurikenHit = e.getSource().getDirectEntity() instanceof ShurikenEntity;
+        
+        if (shurikenHit) {
+            // Bypass invulnerability frames for shurikens only
+            e.getEntity().invulnerableTime = 0;
+        }
+
+        final float raw = e.getAmount();
+        if (raw <= 0f) return;
+
+        // Cap counted damage by victim's remaining HP (prevents overkill over-credit)
+        LivingEntity victim = e.getEntity();
+        float targetHPBefore = victim.getHealth();
+        final float effectiveDamage = Math.max(0f, Math.min(raw, targetHPBefore));
+
+        final ServerPlayer sp = attacker;
+        sp.getCapability(GenjiDataProvider.CAPABILITY).ifPresent(data -> {
+            // Nano damage multiplier: for Shuriken hits only (dragonblade uses vanilla sword mechanics with enchantments)
+            if (shurikenHit && data.isNanoActive()) {
+                float mult = (float) data.getNanoDamageMultiplier();
+                if (mult > 1.0f) {
+                    // Use current event amount; don't touch outer locals inside lambda
+                    e.setAmount(e.getAmount() * mult);
+                }
+            }
+
+        // Check if player is holding shuriken items (for dash damage charging)
+        boolean holdingShuriken = sp.getMainHandItem().is(ModItems.SHURIKEN.get()) || 
+                                sp.getOffhandItem().is(ModItems.SHURIKEN.get());
+
+            // Charge meters (overkill clamped)
+            // Only charge from shuriken hits and dash damage when holding shuriken items
+            if (shurikenHit || holdingShuriken) {
+                data.addNanoFromDamage(effectiveDamage);
+            }
+            if (!data.isBladeActive()) {
+                data.addUltFromDamage(effectiveDamage);
+            }
+
+            // Send hit sound packet to client
+            System.out.println("Hit sound check - shurikenHit: " + shurikenHit + ", bladeActive: " + data.isBladeActive() + ", holdingShuriken: " + holdingShuriken); // Debug log
+            
+            if (shurikenHit) {
+                // Shuriken hit sound
+                System.out.println("SHURIKEN HIT DETECTED - nano active: " + data.isNanoActive()); // Debug log
+                if (data.isNanoActive()) {
+                    System.out.println("Sending shuriken NANO hit sound packet"); // Debug log
+                    ModNetwork.CHANNEL.sendTo(new S2CPlayHitSound("shuriken_nano"), sp.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                } else {
+                    System.out.println("Sending shuriken NORMAL hit sound packet"); // Debug log
+                    ModNetwork.CHANNEL.sendTo(new S2CPlayHitSound("shuriken"), sp.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                }
+            } else if (holdingShuriken) {
+                // Dash damage hit sound (when holding shurikens)
+                System.out.println("Sending dash hit sound packet, nano active: " + data.isNanoActive()); // Debug log
+                if (data.isNanoActive()) {
+                    ModNetwork.CHANNEL.sendTo(new S2CPlayHitSound("shuriken_nano"), sp.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                } else {
+                    ModNetwork.CHANNEL.sendTo(new S2CPlayHitSound("shuriken"), sp.connection.connection, net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT);
+                }
+            }
+
+            // Kill sound is now handled in LivingDeathEvent in DashResets.java
+
+            ModNetwork.CHANNEL.sendTo(
+                    new S2CSyncGenjiData(
+                            data.getUlt(),
+                            data.getNano(),
+                            data.getBladeTicks(),
+                            data.getDeflectTicks(),
+                            data.getDashCooldown(),
+                            data.getDeflectCooldown(),
+                            data.getBladeCastTicks(),
+                            data.getBladeSheatheTicks()
+                    ),
+                    sp.connection.connection,
+                    net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
+            );
+            data.markSynced();
+        });
+    }
+}

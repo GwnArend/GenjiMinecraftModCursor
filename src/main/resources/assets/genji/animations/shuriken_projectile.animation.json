@@ -1,0 +1,43 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"animation.shuriken_projectile.spin": {
+			"loop": true,
+			"animation_length": 0.5,
+			"bones": {
+				"Shuriken": {
+					"rotation": {
+						"0.0": {
+							"vector": [0, 0, 0]
+						},
+						"0.5": {
+							"vector": [0, -360, 0],
+							"easing": "linear"
+						}
+					}
+				},
+				"Projectile": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				}
+			}
+		},
+		"animation.shuriken_projectile.stuck": {
+			"loop": true,
+			"bones": {
+				"Shuriken": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				},
+				"Projectile": {
+					"rotation": {
+						"vector": [0, 0, 0]
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

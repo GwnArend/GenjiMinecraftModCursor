@@ -1,0 +1,86 @@
+package com.example.genji.client.render;
+
+import com.example.genji.client.model.DragonbladeFPSModel;
+import com.example.genji.client.model.DragonbladeTPSModel;
+import com.example.genji.content.DragonbladeItem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import software.bernie.geckolib.renderer.GeoItemRenderer;
+
+import javax.annotation.Nonnull;
+
+/**
+ * Perspective-aware dragonblade renderer that uses different models for first-person and third-person.
+ * First person: hand.fps.model.geo.json + dragonblade.fps.model.geo.json
+ * Third person: dragonblade.tps.model.geo.json
+ * GUI: dragonblade_icon.png (handled by item model)
+ */
+public class PerspectiveAwareDragonbladeRenderer extends BlockEntityWithoutLevelRenderer {
+
+    private final GeoItemRenderer<DragonbladeItem> handRenderer = new HandOnlyRendererForBlade();
+    private final GeoItemRenderer<DragonbladeItem> fpsBladeRenderer = new GeoItemRenderer<>(new DragonbladeFPSModel()) {};
+    private final DragonbladeTPSRenderer tpsBladeRenderer = new DragonbladeTPSRenderer();
+
+    public PerspectiveAwareDragonbladeRenderer() {
+        super(
+                Minecraft.getInstance().getBlockEntityRenderDispatcher(),
+                Minecraft.getInstance().getEntityModels()
+        );
+    }
+
+    @Override
+    public void renderByItem(@Nonnull ItemStack stack,
+                             @Nonnull ItemDisplayContext displayContext,
+                             @Nonnull PoseStack poseStack,
+                             @Nonnull MultiBufferSource buffer,
+                             int packedLight,
+                             int packedOverlay) {
+
+        if (!(stack.getItem() instanceof DragonbladeItem)) return;
+
+        System.out.println("DRAGONBLADE RENDERER: Called with context=" + displayContext);
+
+        // For ground, fixed, and other contexts, let Minecraft handle the default rendering
+        if (displayContext == ItemDisplayContext.GROUND ||
+            displayContext == ItemDisplayContext.FIXED ||
+            displayContext == ItemDisplayContext.HEAD ||
+            displayContext == ItemDisplayContext.NONE) {
+            // Let Minecraft handle the default rendering for these contexts
+            System.out.println("DRAGONBLADE RENDERER: Ground/Fixed/Head/None context - letting Minecraft handle");
+            return;
+        }
+
+        // For first-person rendering, let the FirstPersonDragonbladeOverlay handle it
+        if (isFirstPersonContext(displayContext)) {
+            // First person is handled by FirstPersonDragonbladeOverlay
+            System.out.println("DRAGONBLADE RENDERER: First person context - letting overlay handle");
+            return;
+        }
+
+        // For GUI and third-person contexts, render the GeckoLib TPS model (static)
+        if (displayContext == ItemDisplayContext.GUI || isThirdPersonContext(displayContext)) {
+            System.out.println("DRAGONBLADE RENDERER: GUI/Third person context - rendering TPS model");
+            System.out.println("DRAGONBLADE RENDERER: Display context = " + displayContext);
+            tpsBladeRenderer.renderByItem(stack, displayContext, poseStack, buffer, packedLight, packedOverlay);
+            System.out.println("DRAGONBLADE RENDERER: TPS model render call completed");
+            return;
+        }
+
+        // For any other context, let Minecraft handle it
+        System.out.println("DRAGONBLADE RENDERER: Unknown context - letting Minecraft handle: " + displayContext);
+    }
+
+    private boolean isFirstPersonContext(ItemDisplayContext displayContext) {
+        return displayContext == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND ||
+               displayContext == ItemDisplayContext.FIRST_PERSON_LEFT_HAND;
+    }
+
+    private boolean isThirdPersonContext(ItemDisplayContext displayContext) {
+        return displayContext == ItemDisplayContext.THIRD_PERSON_RIGHT_HAND ||
+               displayContext == ItemDisplayContext.THIRD_PERSON_LEFT_HAND;
+    }
+}

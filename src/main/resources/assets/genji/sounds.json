@@ -1,0 +1,135 @@
+{
+  "shuriken_attack1": {
+    "subtitle": "subtitles.genji.shuriken_attack1",
+    "sounds": [
+      { "name": "genji:shuriken/attack1/shot1",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot2",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot3",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot4",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot5",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot6",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot7",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot8",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot9",  "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot10", "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot11", "volume": 2.5 },
+      { "name": "genji:shuriken/attack1/shot12", "volume": 2.5 }
+    ]
+  },
+  "shuriken_attack2": {
+    "subtitle": "subtitles.genji.shuriken_attack2",
+    "sounds": [
+      { "name": "genji:shuriken/attack2/shot1", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot2", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot3", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot4", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot5", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot6", "volume": 2.5 },
+      { "name": "genji:shuriken/attack2/shot7", "volume": 2.5 }
+    ]
+  },
+  "dash": {
+    "subtitle": "subtitles.genji.dash",
+    "sounds": [
+      { "name": "genji:dash/dash1", "volume": 2.5 },
+      { "name": "genji:dash/dash2", "volume": 2.5 },
+      { "name": "genji:dash/dash3", "volume": 2.5 },
+      { "name": "genji:dash/dash4", "volume": 2.5 },
+      { "name": "genji:dash/dash5", "volume": 2.5 }
+    ]
+  }
+
+  ,
+  "deflect_start": {
+    "subtitle": "subtitles.genji.deflect_start",
+    "sounds": [
+      { "name": "genji:deflect/deflectstart", "volume": 1.0 }
+    ]
+  },
+  "deflect_end": {
+    "subtitle": "subtitles.genji.deflect_end",
+    "sounds": [
+      { "name": "genji:deflect/deflectend", "volume": 1.0 }
+    ]
+  },
+  "deflect_ping": {
+    "subtitle": "subtitles.genji.deflect_ping",
+    "sounds": [
+      { "name": "genji:deflect/ping1", "volume": 1.0 },
+      { "name": "genji:deflect/ping2", "volume": 1.0 },
+      { "name": "genji:deflect/ping3", "volume": 1.0 },
+      { "name": "genji:deflect/ping4", "volume": 1.0 },
+      { "name": "genji:deflect/ping5", "volume": 1.0 }
+    ]
+  },
+  "dragonblade_start": {
+    "subtitle": "subtitles.genji.dragonblade_start",
+    "sounds": [
+      { "name": "genji:dragonblade/dragonbladestart", "volume": 1.0 }
+    ]
+  },
+  "dragonblade_ending": {
+    "subtitle": "subtitles.genji.dragonblade_ending",
+    "sounds": [
+      { "name": "genji:dragonblade/dragonbladeending", "volume": 1.0 }
+    ]
+  },
+  "dragonblade_slice": {
+    "subtitle": "subtitles.genji.dragonblade_slice",
+    "sounds": [
+      { "name": "genji:dragonblade/slice1"  },
+      { "name": "genji:dragonblade/slice2"  },
+      { "name": "genji:dragonblade/slice3"  },
+      { "name": "genji:dragonblade/slice4"  },
+      { "name": "genji:dragonblade/slice5"  },
+      { "name": "genji:dragonblade/slice6"  },
+      { "name": "genji:dragonblade/slice7"  },
+      { "name": "genji:dragonblade/slice8"  },
+      { "name": "genji:dragonblade/slice9"  },
+      { "name": "genji:dragonblade/slice10" }
+    ]
+  },
+  "shuriken_hit": {
+    "subtitle": "subtitles.genji.shuriken_hit",
+    "sounds": [
+      { "name": "genji:misc/hit1", "volume": 2.0 },
+      { "name": "genji:misc/hit2", "volume": 2.0 }
+    ]
+  },
+  "shuriken_hit_nano": {
+    "subtitle": "subtitles.genji.shuriken_hit_nano",
+    "sounds": [
+      { "name": "genji:misc/nano_hit1", "volume": 2.0 },
+      { "name": "genji:misc/nano_hit2", "volume": 2.0 }
+    ]
+  },
+  "dragonblade_hit": {
+    "subtitle": "subtitles.genji.dragonblade_hit",
+    "sounds": [
+      { "name": "genji:misc/slash_hit1", "volume": 3.0 },
+      { "name": "genji:misc/slash_hit2", "volume": 3.0 },
+      { "name": "genji:misc/slash_hit3", "volume": 3.0 }
+    ]
+  },
+  "kill_sound": {
+    "subtitle": "subtitles.genji.kill_sound",
+    "sounds": [
+      { "name": "genji:misc/killsound", "volume": 2.0 }
+    ]
+  },
+  "headshot_hit": {
+    "subtitle": "subtitles.genji.headshot_hit",
+    "sounds": [
+      { "name": "genji:misc/headshot_hit", "volume": 2.0 }
+    ]
+  },
+  "nanoboost_cast": {
+    "subtitle": "subtitles.genji.nanoboost_cast",
+    "sounds": [
+      { "name": "genji:nanoboost/nano1", "volume": 2.0 },
+      { "name": "genji:nanoboost/nano2", "volume": 2.0 }
+    ]
+  }
+
+
+}

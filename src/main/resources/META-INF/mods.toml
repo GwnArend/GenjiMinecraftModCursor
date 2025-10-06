@@ -1,0 +1,16 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="genji"
+version="3.0.0"
+displayName="Genji Mod"
+description="Adds Genji's abilities: shuriken, deflect, dash, and dragonblade."
+
+[[dependencies.genji]]
+modId="geckolib"
+mandatory=true
+versionRange="[4.7.0,5.0.0)"
+ordering="NONE"
+side="BOTH"
