@@ -46,10 +46,24 @@ public final class FirstPersonDashOverlay {
     private static final GeoItemRenderer<DragonbladeItem> WAKIZASHI_RENDERER =
             new GeoItemRenderer<>(new WakizashiFPSModel()) {};
 
+    private static boolean loggedOnce = false;
+    private static long lastDashStartTick = Long.MIN_VALUE;
+
     @SubscribeEvent(priority = EventPriority.HIGHEST, receiveCanceled = true)
     public static void onRenderHand(RenderHandEvent event) {
         if (event.getHand() != InteractionHand.MAIN_HAND) return;
-        if (!FPDashAnim.isActive()) return;
+        
+        boolean isActive = FPDashAnim.isActive();
+        boolean justStarted = FPDashAnim.justStarted();
+        
+        if (isActive && !loggedOnce) {
+            System.out.println("FirstPersonDashOverlay: FPDashAnim is active, rendering dash overlay! justStarted: " + justStarted);
+            loggedOnce = true;
+        }
+        if (!isActive) {
+            loggedOnce = false;
+            return;
+        }
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || !mc.options.getCameraType().isFirstPerson()) return;
@@ -58,6 +72,16 @@ public final class FirstPersonDashOverlay {
         if (DASH_STACK == null) {
             if (!ModItems.DRAGONBLADE.isPresent()) return;
             DASH_STACK = new ItemStack(ModItems.DRAGONBLADE.get());
+        }
+        
+        // If this is a new dash (justStarted), recreate the stack to force GeckoLib reset
+        if (justStarted) {
+            long currentTick = mc.level != null ? mc.level.getGameTime() : 0;
+            if (currentTick != lastDashStartTick) {
+                System.out.println("FirstPersonDashOverlay: New dash detected, recreating DASH_STACK to reset GeckoLib state");
+                DASH_STACK = new ItemStack(ModItems.DRAGONBLADE.get());
+                lastDashStartTick = currentTick;
+            }
         }
 
         final boolean rightHanded = ((AbstractClientPlayer) mc.player).getMainArm() == HumanoidArm.RIGHT;

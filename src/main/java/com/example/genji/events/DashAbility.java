@@ -2,6 +2,8 @@ package com.example.genji.events;
 
 import com.example.genji.capability.GenjiDataProvider;
 import com.example.genji.config.GenjiConfig;
+import com.example.genji.network.ModNetwork;
+import com.example.genji.network.packet.S2CStartDash;
 import com.example.genji.registry.ModSounds;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
@@ -66,8 +68,21 @@ public final class DashAbility {
         // Keep Y sane
         end = new Vec3(end.x, Math.max(level.getMinBuildHeight() + 1, end.y), end.z);
 
-        DashState state = new DashState(sp.position(), end, DURATION_TICKS, 0, new HashSet<>());
+        // Calculate actual distance and scale duration accordingly
+        Vec3 startPos = sp.position();
+        double actualDistance = startPos.distanceTo(end);
+        double distanceRatio = actualDistance / RANGE;
+        int scaledDuration = Math.max(2, (int)(DURATION_TICKS * distanceRatio)); // Min 2 ticks
+
+        DashState state = new DashState(startPos, end, scaledDuration, 0, new HashSet<>());
         ACTIVE.put(sp.getUUID(), state);
+
+        // Send dash info to client for smooth interpolation
+        ModNetwork.CHANNEL.sendTo(
+            new S2CStartDash(startPos, end, scaledDuration),
+            sp.connection.connection,
+            net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
+        );
 
         // Audio & prep
         level.playSound(null, sp, ModSounds.DASH.get(), SoundSource.PLAYERS, 2.0f, 1.0f);
@@ -151,9 +166,8 @@ public final class DashAbility {
             if (wasAlive && e instanceof LivingEntity) {
                 System.out.println("DASH: Damage dealt, sending hit sound"); // Debug log
                 
-                // Get player data to check nano status and dragonblade status
+                // Get player data to check nano status
                 sp.getCapability(com.example.genji.capability.GenjiDataProvider.CAPABILITY).ifPresent(data -> {
-                    boolean isBladeActive = data.isBladeActive();
                     boolean isNanoActive = data.isNanoActive();
                     
                     // Always play shuriken hit sounds for dash (normal or nano based on status)

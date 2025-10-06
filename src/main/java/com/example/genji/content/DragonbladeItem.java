@@ -54,8 +54,9 @@ public class DragonbladeItem extends SwordItem implements GeoItem {
         DEFLECT_START, DEFLECT_HIT1, DEFLECT_HIT2, DEFLECT_HIT3, DEFLECT_IDLE, DEFLECT_END,
         UNSHEATHE, IDLE, SWING_L, SWING_R, SHEATHE
     }
-    private static Phase handPhase  = Phase.NONE;
-    private static Phase bladePhase = Phase.NONE;
+    // Non-static per-instance phase tracking
+    private Phase handPhase  = Phase.NONE;
+    private Phase bladePhase = Phase.NONE;
 
     public DragonbladeItem(Tier tier, int dmg, float speed, Properties props) {
         super(tier, dmg, speed, props);
@@ -124,25 +125,43 @@ public class DragonbladeItem extends SwordItem implements GeoItem {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar ctrls) {
-        ctrls.add(new AnimationController<>(this, "hand_ctrl", TRANSITION_TICKS, (AnimationState<DragonbladeItem> state) -> {
+        ctrls.add(new AnimationController<>(this, "hand_ctrl", TRANSITION_TICKS, state -> {
+            DragonbladeItem item = state.getAnimatable();
             Phase want = currentPhase();
-            // Force reset op edges voor stabiele herstart
+            
+            // Force reset on edges for stable restart
             if (want == Phase.DASH && FPDashAnim.justStarted()) {
+                System.out.println("DragonbladeItem hand_ctrl: DASH justStarted, forcing animation reset and phase reset");
                 state.getController().forceAnimationReset();
+                item.handPhase = Phase.NONE; // Force phase reset to ensure setClip is called
             } else if (isDeflectPhase(want) && (FPDeflectAnim.justStarted() || FPDeflectAnim.justHit() || FPDeflectAnim.justEnded())) {
                 state.getController().forceAnimationReset();
             }
-            if (want != handPhase) { setClip(state, want); handPhase = want; }
+            
+            if (want != item.handPhase) { 
+                System.out.println("DragonbladeItem hand_ctrl: Phase changed from " + item.handPhase + " to " + want);
+                setClip(state, want); 
+                item.handPhase = want; 
+            }
             return want == Phase.NONE ? PlayState.STOP : PlayState.CONTINUE;
         }));
-        ctrls.add(new AnimationController<>(this, "blade_ctrl", TRANSITION_TICKS, (AnimationState<DragonbladeItem> state) -> {
+        ctrls.add(new AnimationController<>(this, "blade_ctrl", TRANSITION_TICKS, state -> {
+            DragonbladeItem item = state.getAnimatable();
             Phase want = currentPhase();
+            
             if (want == Phase.DASH && FPDashAnim.justStarted()) {
+                System.out.println("DragonbladeItem blade_ctrl: DASH justStarted, forcing animation reset and phase reset");
                 state.getController().forceAnimationReset();
+                item.bladePhase = Phase.NONE; // Force phase reset to ensure setClip is called
             } else if (isDeflectPhase(want) && (FPDeflectAnim.justStarted() || FPDeflectAnim.justHit() || FPDeflectAnim.justEnded())) {
                 state.getController().forceAnimationReset();
             }
-            if (want != bladePhase) { setClip(state, want); bladePhase = want; }
+            
+            if (want != item.bladePhase) { 
+                System.out.println("DragonbladeItem blade_ctrl: Phase changed from " + item.bladePhase + " to " + want);
+                setClip(state, want); 
+                item.bladePhase = want; 
+            }
             return want == Phase.NONE ? PlayState.STOP : PlayState.CONTINUE;
         }));
     }
