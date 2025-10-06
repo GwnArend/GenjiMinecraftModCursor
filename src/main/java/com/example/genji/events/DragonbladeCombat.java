@@ -1,7 +1,6 @@
 package com.example.genji.events;
 
 import com.example.genji.capability.GenjiDataProvider;
-import com.example.genji.config.GenjiConfig;
 import com.example.genji.content.DragonbladeItem;
 import com.example.genji.registry.ModSounds;
 import com.example.genji.network.ModNetwork;
@@ -25,17 +24,19 @@ public final class DragonbladeCombat {
     private static final Set<UUID> HELD_SECONDARY = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> STARTUP_IN_PROGRESS = ConcurrentHashMap.newKeySet();
 
-    private static final Map<UUID, Long> COMBO_WINDOW_UNTIL = new HashMap<>();
-    private static final Set<UUID> WAS_READY = new HashSet<>();
+    // Combo window: 0.5 seconds (10 ticks) AFTER recovery completes to chain LEFT -> RIGHT
+    private static final int COMBO_WINDOW_TICKS = 10;
+    
+    // Track when last swing fully completed (after recovery) for combo window
+    private static final Map<UUID, Long> LAST_SWING_COMPLETION_TIME = new ConcurrentHashMap<>();
 
     public static void perPlayerTick(ServerPlayer sp) {
         var data = GenjiDataProvider.get(sp);
         if (!data.isBladeActive()) {
             STARTUP_IN_PROGRESS.remove(sp.getUUID());
+            LAST_SWING_COMPLETION_TIME.remove(sp.getUUID());
             return;
         }
-        
-        System.out.println("DRAGONBLADE: Player " + sp.getName() + " has blade active, ticks remaining: " + data.getBladeTicks()); // Debug log
 
         // Startup -> land -> recovery
         if (STARTUP_IN_PROGRESS.contains(sp.getUUID()) && data.getSwingStartupTicks() == 0) {
@@ -47,32 +48,62 @@ public final class DragonbladeCombat {
         final UUID id = sp.getUUID();
         final long nowTicks = sp.level().getGameTime();
 
-        final boolean canSwingNow = data.canSwingNow();
-        final boolean wasReady = WAS_READY.contains(id);
+        // When recovery completes, handle combo window logic
+        if (data.getSwingRecoverTicks() == 1) {
+            // Recovery is about to complete this tick
+            // Only set combo window if the last swing was LEFT (nextSwingIsRight = true means last was LEFT)
+            if (data.nextSwingIsRight()) {
+                // Last swing was LEFT, open combo window for RIGHT swing
+                LAST_SWING_COMPLETION_TIME.put(id, nowTicks + 1);
+            } else {
+                // Last swing was RIGHT, no combo window, reset to LEFT
+                LAST_SWING_COMPLETION_TIME.remove(id);
+                data.resetSwingToLeft();
+            }
+        }
 
-        final int comboWindow = GenjiConfig.DRAGONBLADE_COMBO_WINDOW_TICKS.get();
-        if (canSwingNow && !wasReady) {
-            COMBO_WINDOW_UNTIL.put(id, nowTicks + comboWindow);
-            WAS_READY.add(id);
-        } else if (!canSwingNow && wasReady) {
-            WAS_READY.remove(id);
+        // Check if we're outside the combo window - if so, reset to LEFT swing
+        Long lastCompletionTime = LAST_SWING_COMPLETION_TIME.get(id);
+        if (lastCompletionTime != null && data.canSwingNow()) {
+            long timeSinceCompletion = nowTicks - lastCompletionTime;
+            if (timeSinceCompletion >= COMBO_WINDOW_TICKS) {
+                // Combo window expired, reset to LEFT
+                data.resetSwingToLeft();
+                LAST_SWING_COMPLETION_TIME.remove(id);
+            }
         }
 
         // Use our custom timing system to trigger attacks
-        // Better Combat will handle the animations and damage when we call attack()
         boolean held = HELD_PRIMARY.contains(id) || HELD_SECONDARY.contains(id);
         boolean canSwing = data.canSwingNow();
-        System.out.println("DRAGONBLADE: held=" + held + ", canSwing=" + canSwing + ", startupInProgress=" + STARTUP_IN_PROGRESS.contains(id));
         
         if (held && canSwing && STARTUP_IN_PROGRESS.add(id)) {
-            System.out.println("DRAGONBLADE: TRIGGERING ATTACK!");
-            boolean rightToLeft = data.nextSwingIsRight();
-            data.startSwingStartup(rightToLeft);         // keep our timing system
-            data.setNextSwingRight(!rightToLeft);
+            // Determine swing direction based on combo window
+            boolean isLeftSwing;
+            
+            if (lastCompletionTime == null) {
+                // First swing or blade just started - always LEFT
+                isLeftSwing = true;
+            } else {
+                long timeSinceCompletion = nowTicks - lastCompletionTime;
+                if (timeSinceCompletion < COMBO_WINDOW_TICKS && data.nextSwingIsRight()) {
+                    // Within combo window and ready for RIGHT swing
+                    isLeftSwing = false;
+                } else {
+                    // Outside combo window or not ready - reset to LEFT
+                    isLeftSwing = true;
+                }
+            }
+            
+            // Set up the swing
+            data.startSwingStartup(!isLeftSwing);  // rightToLeft = !isLeftSwing
+            
+            // Set next swing direction: if this was LEFT, next can be RIGHT (within window)
+            data.setNextSwingRight(isLeftSwing);
 
             // Trigger first-person animation
             ModNetwork.CHANNEL.sendTo(
-                    new S2CDragonbladeFPAnim(rightToLeft ? S2CDragonbladeFPAnim.Dir.RIGHT : S2CDragonbladeFPAnim.Dir.LEFT),
+                    new S2CDragonbladeFPAnim(isLeftSwing ? S2CDragonbladeFPAnim.Dir.LEFT : S2CDragonbladeFPAnim.Dir.RIGHT),
                     sp.connection.connection,
                     NetworkDirection.PLAY_TO_CLIENT
             );
@@ -92,19 +123,16 @@ public final class DragonbladeCombat {
     public static void setPrimaryHeld(ServerPlayer sp, boolean down) {
         if (down) {
             HELD_PRIMARY.add(sp.getUUID());
-            System.out.println("DRAGONBLADE: Primary held set to TRUE for " + sp.getName());
         } else {
             HELD_PRIMARY.remove(sp.getUUID());
-            System.out.println("DRAGONBLADE: Primary held set to FALSE for " + sp.getName());
         }
     }
+    
     public static void setSecondaryHeld(ServerPlayer sp, boolean down) {
         if (down) {
             HELD_SECONDARY.add(sp.getUUID());
-            System.out.println("DRAGONBLADE: Secondary held set to TRUE for " + sp.getName());
         } else {
             HELD_SECONDARY.remove(sp.getUUID());
-            System.out.println("DRAGONBLADE: Secondary held set to FALSE for " + sp.getName());
         }
     }
 
@@ -120,31 +148,14 @@ public final class DragonbladeCombat {
     }
 
     private static void triggerAttack(ServerPlayer sp) {
-        // OLD CUSTOM DAMAGE SYSTEM: Trace-based damage in front of player
-        // 5 block range, multiple targets, +50% damage with nanoboost
-        
-        System.out.println("DRAGONBLADE: triggerAttack called for " + sp.getName());
-        
         // Get the dragonblade item
         ItemStack mainHand = sp.getMainHandItem();
         if (mainHand.isEmpty() || !(mainHand.getItem() instanceof DragonbladeItem)) {
-            System.out.println("DRAGONBLADE: No dragonblade item in main hand!");
             return;
         }
         
-        System.out.println("DRAGONBLADE: Found dragonblade item, performing trace-based damage...");
-        
-        // Trigger third-person swing animation
-        System.out.println("DRAGONBLADE: Triggering swing animation for hand: " + sp.getUsedItemHand());
-        sp.swing(sp.getUsedItemHand());
-        System.out.println("DRAGONBLADE: Swing animation triggered");
-        
         // Perform trace-based damage in front of player
         damageInFrontWithLOS(sp);
-        
-        // Play our custom sound
-        float pitch = 0.9f + sp.getRandom().nextFloat() * 0.2f;
-        sp.serverLevel().playSound(null, sp, ModSounds.DRAGONBLADE_SLICE.get(), SoundSource.PLAYERS, 1.0f, pitch);
     }
     
     private static void damageInFrontWithLOS(ServerPlayer sp) {
@@ -154,14 +165,11 @@ public final class DragonbladeCombat {
         
         // 5 block range for dragonblade
         double range = 5.0;
-        Vec3 endPos = playerPos.add(lookVec.scale(range));
         
         // Get all entities in a cone in front of the player
         AABB searchBox = sp.getBoundingBox().inflate(range, 1.0, range);
         var entities = level.getEntitiesOfClass(LivingEntity.class, searchBox, 
             entity -> entity != sp && entity.isAlive() && !entity.isDeadOrDying() && sp.canAttack(entity));
-        
-        System.out.println("DRAGONBLADE: Found " + entities.size() + " entities in search area");
         
         // Check nanoboost status for damage multiplier
         var data = GenjiDataProvider.get(sp);
@@ -170,9 +178,6 @@ public final class DragonbladeCombat {
         float baseDamage = 8.8f; // Base dragonblade damage
         float finalDamage = baseDamage * damageMultiplier;
         
-        System.out.println("DRAGONBLADE: Base damage: " + baseDamage + ", Multiplier: " + damageMultiplier + ", Final: " + finalDamage);
-        
-        int hitCount = 0;
         for (LivingEntity entity : entities) {
             Vec3 entityPos = entity.getEyePosition();
             Vec3 toEntity = entityPos.subtract(playerPos);
@@ -196,12 +201,8 @@ public final class DragonbladeCombat {
             }
             
             // Apply damage
-            System.out.println("DRAGONBLADE: Hitting " + entity.getName() + " for " + finalDamage + " damage");
             entity.hurt(level.damageSources().playerAttack(sp), finalDamage);
-            hitCount++;
         }
-        
-        System.out.println("DRAGONBLADE: Hit " + hitCount + " targets with trace-based damage");
     }
 
 }

@@ -171,23 +171,18 @@ public class CommonEvents {
 
     @SubscribeEvent
     public static void onEntityHurt(LivingHurtEvent e) {
-        System.out.println("onEntityHurt triggered - source: " + e.getSource().getMsgId() + ", entity: " + e.getSource().getEntity()); // Debug log
-        
         // Attribute damage to a player (direct or projectile owner)
         ServerPlayer attacker = null;
         Entity srcEntity = e.getSource().getEntity();
         if (srcEntity instanceof ServerPlayer sp) {
             attacker = sp;
-            System.out.println("Attacker found: " + sp.getName()); // Debug log
         } else {
             Entity direct = e.getSource().getDirectEntity();
             if (direct instanceof Projectile proj && proj.getOwner() instanceof ServerPlayer owner) {
                 attacker = owner;
-                System.out.println("Projectile attacker found: " + owner.getName()); // Debug log
             }
         }
         if (attacker == null) {
-            System.out.println("No attacker found, returning"); // Debug log
             return;
         }
 

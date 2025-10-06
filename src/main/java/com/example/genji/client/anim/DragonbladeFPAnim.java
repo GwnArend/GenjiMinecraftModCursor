@@ -17,15 +17,32 @@ public final class DragonbladeFPAnim {
 
     private static Dir current = Dir.NONE;
     private static long startTick = Long.MIN_VALUE;
+    
+    // Track when a new swing just started
+    private static long justStartedTick = Long.MIN_VALUE;
 
-    public static void startLeft()  { current = Dir.LEFT;  startTick = gameTicks(); }
-    public static void startRight() { current = Dir.RIGHT; startTick = gameTicks(); }
+    public static void startLeft()  { 
+        current = Dir.LEFT;  
+        startTick = gameTicks();
+        justStartedTick = gameTicks();
+    }
+    
+    public static void startRight() { 
+        current = Dir.RIGHT; 
+        startTick = gameTicks();
+        justStartedTick = gameTicks();
+    }
 
     /** Call every frame to see if LEFT swing is active. */
     public static boolean isLeft()  { return is(Dir.LEFT); }
 
     /** Call every frame to see if RIGHT swing is active. */
     public static boolean isRight() { return is(Dir.RIGHT); }
+    
+    /** Check if a swing just started this tick (safe to call multiple times per tick). */
+    public static boolean justStarted() {
+        return justStartedTick == gameTicks();
+    }
 
     private static boolean is(Dir dir) {
         if (current != dir) return false;
