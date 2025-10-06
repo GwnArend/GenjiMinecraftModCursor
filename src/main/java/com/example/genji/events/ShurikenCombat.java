@@ -72,9 +72,10 @@ public class ShurikenCombat {
             for (ServerPlayer sp : lvl.players()) {
                 State s = state(sp);
 
-                // HARD STOP while unsheathing, active blade, or sheathing
+                // HARD STOP while unsheathing, active blade, sheathing, dashing, or deflecting
                 var data = GenjiDataProvider.get(sp);
-                if (data.isCastingBlade() || data.isBladeActive() || data.isSheathing()) {
+                if (data.isCastingBlade() || data.isBladeActive() || data.isSheathing() 
+                        || DashAbility.isDashing(sp) || data.isDeflectActive()) {
                     s.primaryHeld = false;
                     s.secondaryHeld = false;
                     s.burstShotsLeft = 0;

@@ -40,6 +40,11 @@ public final class DashAbility {
         DashState advance() { return new DashState(start, end, total, tick + 1, hit); }
     }
 
+    /** Check if a player is currently dashing. */
+    public static boolean isDashing(ServerPlayer sp) {
+        return ACTIVE.containsKey(sp.getUUID());
+    }
+
     /** Called from packet to start a dash if cooldown allows. */
     public static void startDash(ServerPlayer sp, boolean bladeActive) {
         var data = GenjiDataProvider.get(sp);
