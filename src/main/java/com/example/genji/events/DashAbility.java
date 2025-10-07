@@ -189,24 +189,30 @@ public final class DashAbility {
     }
 
     private static void spawnStartBurst(ServerLevel level, Vec3 pos, Vec3 dir) {
-        // tiny burst at start
-        for (int i = 0; i < 6; i++) {
-            double s = 0.05 + i * 0.01;
-            level.sendParticles(ParticleTypes.CRIT,
-                    pos.x, pos.y + 0.1, pos.z,
-                    1, dir.x * s, dir.y * s, dir.z * s, 0.0);
+        // Bigger burst at start with fast-dissipating green particles
+        for (int i = 0; i < 15; i++) {
+            double s = 0.15 + i * 0.02;
+            // Composter particles (green) - dissipate very quickly
+            level.sendParticles(ParticleTypes.COMPOSTER,
+                    pos.x, pos.y + 0.5, pos.z,
+                    2, dir.x * s, dir.y * s, dir.z * s, 0.1);
         }
     }
 
     private static void spawnStepTrail(ServerLevel level, Vec3 from, Vec3 to) {
-        // a few particles between prev and next
+        // Green composter particles with fast dissipation
         double dx = to.x - from.x, dy = to.y - from.y, dz = to.z - from.z;
-        int steps = 3;
+        int steps = 6;
         for (int i = 1; i <= steps; i++) {
             double t = i / (double) (steps + 1);
-            level.sendParticles(ParticleTypes.CRIT,
-                    from.x + dx * t, from.y + dy * t + 0.05, from.z + dz * t,
-                    1, 0, 0, 0, 0);
+            double px = from.x + dx * t;
+            double py = from.y + dy * t + 0.5;
+            double pz = from.z + dz * t;
+            
+            // Composter particles (green) - dissipate quickly, bigger spread
+            level.sendParticles(ParticleTypes.COMPOSTER,
+                    px, py, pz,
+                    3, 0.15, 0.15, 0.15, 0.05);
         }
     }
 }
