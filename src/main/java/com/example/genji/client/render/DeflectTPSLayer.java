@@ -25,14 +25,14 @@ public class DeflectTPSLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
     private final GeoItemRenderer<DragonbladeItem> renderer = new GeoItemRenderer<>(new DeflectTPSModelForDragonblade());
     private static ItemStack dummyStack = null;
     
-    // Adjustable position and rotation (debug mode)
-    public static double offsetX = 0.450;
-    public static double offsetY = 0.900;
-    public static double offsetZ = -0.550;
-    public static float rotationX = 180.0f;
-    public static float rotationY = -180.0f;
-    public static float rotationZ = 0.0f;
-    public static float scale = 1.000f;
+    // Position and rotation for the deflect model
+    private static final double OFFSET_X = 0.450;
+    private static final double OFFSET_Y = 0.900;
+    private static final double OFFSET_Z = -0.550;
+    private static final float ROTATION_X = 180.0f;
+    private static final float ROTATION_Y = -180.0f;
+    private static final float ROTATION_Z = 0.0f;
+    private static final float SCALE = 1.000f;
 
     public DeflectTPSLayer(RenderLayerParent<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> renderer) {
         super(renderer);
@@ -56,15 +56,15 @@ public class DeflectTPSLayer extends RenderLayer<AbstractClientPlayer, PlayerMod
         poseStack.pushPose();
 
         // Position relative to player body
-        poseStack.translate(offsetX, offsetY, offsetZ);
+        poseStack.translate(OFFSET_X, OFFSET_Y, OFFSET_Z);
         
         // Apply rotations
-        poseStack.mulPose(Axis.XP.rotationDegrees(rotationX));
-        poseStack.mulPose(Axis.YP.rotationDegrees(rotationY));
-        poseStack.mulPose(Axis.ZP.rotationDegrees(rotationZ));
+        poseStack.mulPose(Axis.XP.rotationDegrees(ROTATION_X));
+        poseStack.mulPose(Axis.YP.rotationDegrees(ROTATION_Y));
+        poseStack.mulPose(Axis.ZP.rotationDegrees(ROTATION_Z));
         
         // Apply scale
-        poseStack.scale(scale, scale, scale);
+        poseStack.scale(SCALE, SCALE, SCALE);
 
         // Use GeckoLib's standard renderByItem method
         renderer.renderByItem(
