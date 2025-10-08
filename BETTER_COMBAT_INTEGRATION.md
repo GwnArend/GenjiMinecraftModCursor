@@ -64,3 +64,5 @@ You can modify the weapon attributes by editing:
 For more information, see the [Better Combat integration guide](https://github.com/ZsoltMolnarrr/BetterCombat?tab=readme-ov-file#-integrate-your-mod).
 
 
+
+
