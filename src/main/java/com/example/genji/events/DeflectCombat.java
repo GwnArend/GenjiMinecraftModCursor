@@ -1,10 +1,11 @@
 package com.example.genji.events;
 
-import com.example.genji.capability.GenjiDataProvider;
 import com.example.genji.config.GenjiConfig;
 import com.example.genji.network.ModNetwork;
 import com.example.genji.network.packet.S2CDeflectHit;
 import com.example.genji.registry.ModSounds;
+import com.example.genji.util.AdvancementHelper;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -113,6 +114,9 @@ public final class DeflectCombat {
         }
 
         if (anyReflected) {
+            // Grant deflect achievement on first successful deflect
+            AdvancementHelper.grantAdvancement(sp, ResourceLocation.fromNamespaceAndPath("genji", "first_deflect"));
+            
             int variant = 1 + sp.getRandom().nextInt(3);
             ModNetwork.CHANNEL.sendTo(new S2CDeflectHit(variant),
                     sp.connection.connection, NetworkDirection.PLAY_TO_CLIENT);

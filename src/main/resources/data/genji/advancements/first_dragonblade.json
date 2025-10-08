@@ -1,0 +1,24 @@
+{
+  "parent": "genji:root",
+  "display": {
+    "icon": {
+      "item": "genji:dragonblade"
+    },
+    "title": {
+      "translate": "advancement.genji.first_dragonblade.title"
+    },
+    "description": {
+      "translate": "advancement.genji.first_dragonblade.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "cast_dragonblade": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
+
