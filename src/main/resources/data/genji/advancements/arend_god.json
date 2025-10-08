@@ -1,0 +1,24 @@
+{
+  "parent": "genji:root",
+  "display": {
+    "icon": {
+      "item": "genji:dragonblade"
+    },
+    "title": {
+      "translate": "advancement.genji.arend_god.title"
+    },
+    "description": {
+      "translate": "advancement.genji.arend_god.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "arend_is_god": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
+

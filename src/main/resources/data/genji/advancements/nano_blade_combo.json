@@ -1,0 +1,24 @@
+{
+  "parent": "genji:first_dragonblade",
+  "display": {
+    "icon": {
+      "item": "genji:dragonblade"
+    },
+    "title": {
+      "translate": "advancement.genji.nano_blade_combo.title"
+    },
+    "description": {
+      "translate": "advancement.genji.nano_blade_combo.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "nano_blade_active": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
+

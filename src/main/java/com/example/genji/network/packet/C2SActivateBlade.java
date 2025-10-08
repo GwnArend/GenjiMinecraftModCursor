@@ -6,7 +6,9 @@ import com.example.genji.events.ShurikenCombat;
 import com.example.genji.network.ModNetwork;
 import com.example.genji.registry.ModItems;
 import com.example.genji.registry.ModSounds;
+import com.example.genji.util.AdvancementHelper;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -40,7 +42,8 @@ public class C2SActivateBlade {
                 ItemStack dragonbladeStack = new ItemStack(ModItems.DRAGONBLADE.get());
                 
                 // Apply nanoboost enchantments if active
-                if (data.isNanoActive()) {
+                boolean nanoWasActive = data.isNanoActive();
+                if (nanoWasActive) {
                     DragonbladeItem.applyNanoboostEnchantments(dragonbladeStack, true);
                 }
                 
@@ -49,6 +52,14 @@ public class C2SActivateBlade {
 
                 // Start cast (this also cancels deflect pose without cooldown)
                 data.beginBladeCast();
+                
+                // Grant first dragonblade advancement
+                AdvancementHelper.grantAdvancement(sp, ResourceLocation.fromNamespaceAndPath("genji", "first_dragonblade"));
+                
+                // Grant combo achievement if nano was active when blade was cast
+                if (nanoWasActive) {
+                    AdvancementHelper.grantAdvancement(sp, ResourceLocation.fromNamespaceAndPath("genji", "nano_blade_combo"));
+                }
 
                 // Play the ult VO / start sound
                 sp.level().playSound(null, sp, ModSounds.DRAGONBLADE_START.get(), SoundSource.PLAYERS, 1.0f, 1.0f);

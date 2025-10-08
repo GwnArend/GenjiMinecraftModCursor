@@ -4,7 +4,9 @@ import com.example.genji.capability.GenjiDataProvider;
 import com.example.genji.content.DragonbladeItem;
 import com.example.genji.registry.ModItems;
 import com.example.genji.registry.ModSounds;
+import com.example.genji.util.AdvancementHelper;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
@@ -30,6 +32,9 @@ public class C2SActivateNanoBoost {
 
                 data.beginNanoBoost();             // consume charge & start timer
                 
+                // Grant first nanoboost advancement
+                AdvancementHelper.grantAdvancement(sp, ResourceLocation.fromNamespaceAndPath("genji", "first_nanoboost"));
+                
                 // Update dragonblade enchantments if blade is active
                 if (data.isBladeActive()) {
                     int bladeSlot = data.getBladeSlot();
@@ -40,6 +45,9 @@ public class C2SActivateNanoBoost {
                             sp.inventoryMenu.broadcastChanges();
                         }
                     }
+                    
+                    // Grant combo achievement if both nano and blade are active
+                    AdvancementHelper.grantAdvancement(sp, ResourceLocation.fromNamespaceAndPath("genji", "nano_blade_combo"));
                 }
                 
                 // Play nanoboost casting sound
