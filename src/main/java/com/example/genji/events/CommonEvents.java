@@ -213,13 +213,15 @@ public class CommonEvents {
                 }
             }
 
-        // Check if player is holding shuriken items (for dash damage charging)
+        // Check if player is holding shuriken or dragonblade items
         boolean holdingShuriken = sp.getMainHandItem().is(ModItems.SHURIKEN.get()) || 
                                 sp.getOffhandItem().is(ModItems.SHURIKEN.get());
+        boolean holdingDragonblade = sp.getMainHandItem().is(ModItems.DRAGONBLADE.get()) || 
+                                     sp.getOffhandItem().is(ModItems.DRAGONBLADE.get());
 
             // Charge meters (overkill clamped)
-            // Only charge from shuriken hits and dash damage when holding shuriken items
-            if (shurikenHit || holdingShuriken) {
+            // Charge nano from: shuriken hits, dash damage, and dragonblade attacks
+            if (shurikenHit || holdingShuriken || holdingDragonblade) {
                 data.addNanoFromDamage(effectiveDamage);
             }
             if (!data.isBladeActive()) {
