@@ -204,8 +204,14 @@ public class CommonEvents {
 
         final ServerPlayer sp = attacker;
         sp.getCapability(GenjiDataProvider.CAPABILITY).ifPresent(data -> {
-            // Nano damage multiplier: for Shuriken hits only (dragonblade uses vanilla sword mechanics with enchantments)
-            if (shurikenHit && data.isNanoActive()) {
+            // Nano damage multiplier: for Shuriken hits, Dash damage, and Deflected projectiles (dragonblade uses vanilla sword mechanics with enchantments)
+            boolean isDashing = DashAbility.isDashing(sp);
+            
+            // Check if this is a deflected projectile (any projectile owned by player, excluding shurikens which are already handled)
+            Entity direct = e.getSource().getDirectEntity();
+            boolean isDeflectedProjectile = !shurikenHit && direct instanceof Projectile proj && proj.getOwner() == sp;
+            
+            if ((shurikenHit || isDashing || isDeflectedProjectile) && data.isNanoActive()) {
                 float mult = (float) data.getNanoDamageMultiplier();
                 if (mult > 1.0f) {
                     // Use current event amount; don't touch outer locals inside lambda

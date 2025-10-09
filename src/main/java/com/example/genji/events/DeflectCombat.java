@@ -84,6 +84,13 @@ public final class DeflectCombat {
 
             // Snelheden
             double current = proj.getDeltaMovement().length();
+            
+            // Skip stationary projectiles (stuck in ground/walls or otherwise not moving)
+            // This catches arrows/shurikens stuck in blocks, as well as any other stationary projectiles
+            if (current < 0.01) {
+                continue; // Projectile is essentially stationary, don't deflect
+            }
+            
             double min = minSpeed(proj);
             float  speed = (float) Math.max(current, min);
 

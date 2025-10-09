@@ -88,9 +88,9 @@ public final class GenjiConfig {
         DEFLECT_CONE_DOT_MIN = b.defineInRange("ConeDotMin",       0.35, -1.0, 1.0);
         DEFLECT_REREFLECT_COOLDOWN_TICKS = b.defineInRange("ReReflectCooldownTicks", 6, 0, 200);
         DEFLECT_PING_VOLUME  = b.defineInRange("PingVolume",       0.8, 0.0, 2.0);
-        DEFLECT_MIN_SPEED_ARROW   = b.defineInRange("MinSpeed.Arrow",   0.08, 0.0, 10.0);
-        DEFLECT_MIN_SPEED_HURTING = b.defineInRange("MinSpeed.Hurting", 0.05, 0.0, 10.0);
-        DEFLECT_MIN_SPEED_DEFAULT = b.defineInRange("MinSpeed.Default", 0.06, 0.0, 10.0);
+        DEFLECT_MIN_SPEED_ARROW   = b.defineInRange("MinSpeed.Arrow",   3.75, 0.0, 10.0);  // 75 blocks/sec
+        DEFLECT_MIN_SPEED_HURTING = b.defineInRange("MinSpeed.Hurting", 3.75, 0.0, 10.0);  // 75 blocks/sec
+        DEFLECT_MIN_SPEED_DEFAULT = b.defineInRange("MinSpeed.Default", 3.75, 0.0, 10.0);  // 75 blocks/sec
         b.pop();
 
         // Dash
