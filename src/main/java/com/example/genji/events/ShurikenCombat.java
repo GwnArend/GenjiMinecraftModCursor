@@ -190,21 +190,38 @@ public class ShurikenCombat {
         Vec3 eye  = sp.getEyePosition();
         Vec3 pos  = eye.add(look.scale(0.15));
 
+        // Calculate right and up vectors perpendicular to look direction
+        Vec3 worldUp = new Vec3(0, 1, 0);
+        Vec3 right = look.cross(worldUp);
+        Vec3 rotationAxis;
+        
+        // Handle edge case when looking straight up/down (right vector is near zero)
+        if (right.lengthSqr() < 0.01) {
+            // When looking exactly up/down, use player's yaw to determine horizontal direction
+            float yaw = sp.getYRot() * Mth.DEG_TO_RAD;
+            right = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
+            // For edge case, rotate around world up to maintain horizontal spread
+            rotationAxis = worldUp;
+        } else {
+            // Normal case: rotate around the up vector perpendicular to look and right
+            right = right.normalize();
+            rotationAxis = right.cross(look).normalize();
+        }
+        
         // Add small offsets to prevent shurikens from spawning in the exact same position
         Vec3 centerPos = pos;
-        Vec3 yUnit = new Vec3(0, 1, 0);
-        Vec3 leftPos   = pos.add(look.cross(yUnit).scale(0.1));  // 0.1 block to the left
-        Vec3 rightPos  = pos.add(look.cross(yUnit).scale(-0.1)); // 0.1 block to the right
+        Vec3 leftPos   = pos.add(right.scale(0.1));  // 0.1 block to the left
+        Vec3 rightPos  = pos.add(right.scale(-0.1)); // 0.1 block to the right
 
         // center
         spawnWithDir(sp, centerPos, look);
 
-        // yaw left/right around world Y
-        Vec3 left  = yaw(look,  Mth.DEG_TO_RAD * FAN_DEGREES);
-        Vec3 right = yaw(look, -Mth.DEG_TO_RAD * FAN_DEGREES);
+        // Rotate around the appropriate axis for horizontal fan spread (left/right)
+        Vec3 left  = rotateAroundAxis(look, rotationAxis,  Mth.DEG_TO_RAD * FAN_DEGREES);
+        Vec3 right_dir = rotateAroundAxis(look, rotationAxis, -Mth.DEG_TO_RAD * FAN_DEGREES);
 
         spawnWithDir(sp, leftPos, left);
-        spawnWithDir(sp, rightPos, right);
+        spawnWithDir(sp, rightPos, right_dir);
     }
 
     private static void spawnWithDir(ServerPlayer sp, Vec3 pos, Vec3 dirNorm) {
@@ -218,12 +235,19 @@ public class ShurikenCombat {
         level.addFreshEntity(proj);
     }
 
-    // Rotate vector v around world Y by radians (yaw-only)
-    private static Vec3 yaw(Vec3 v, float radians) {
-        double c = Math.cos(radians), s = Math.sin(radians);
-        double x = v.x * c + v.z * s;
-        double z = v.z * c - v.x * s;
-        return new Vec3(x, v.y, z).normalize();
+    // Rotate vector v around arbitrary axis by radians using Rodrigues' rotation formula
+    private static Vec3 rotateAroundAxis(Vec3 v, Vec3 axis, float radians) {
+        axis = axis.normalize();
+        double cos = Math.cos(radians);
+        double sin = Math.sin(radians);
+        double dot = v.dot(axis);
+        
+        // Rodrigues' rotation formula: v_rot = v*cos + (axis × v)*sin + axis*(axis · v)*(1-cos)
+        Vec3 term1 = v.scale(cos);
+        Vec3 term2 = axis.cross(v).scale(sin);
+        Vec3 term3 = axis.scale(dot * (1 - cos));
+        
+        return term1.add(term2).add(term3).normalize();
     }
 
     // Return 14,14,14,13,13 (average 13.6 ticks == 0.68s)
