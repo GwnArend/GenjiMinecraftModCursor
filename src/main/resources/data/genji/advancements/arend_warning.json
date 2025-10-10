@@ -2,7 +2,7 @@
   "parent": "genji:root",
   "display": {
     "icon": {
-      "item": "genji:shuriken"
+      "item": "minecraft:nether_star"
     },
     "title": {
       "translate": "advancement.genji.arend_warning.title"

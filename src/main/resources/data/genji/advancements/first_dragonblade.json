@@ -2,7 +2,7 @@
   "parent": "genji:root",
   "display": {
     "icon": {
-      "item": "genji:dragonblade"
+      "item": "minecraft:diamond_sword"
     },
     "title": {
       "translate": "advancement.genji.first_dragonblade.title"

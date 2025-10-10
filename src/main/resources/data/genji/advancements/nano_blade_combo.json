@@ -2,7 +2,7 @@
   "parent": "genji:first_dragonblade",
   "display": {
     "icon": {
-      "item": "genji:dragonblade"
+      "item": "minecraft:diamond_sword"
     },
     "title": {
       "translate": "advancement.genji.nano_blade_combo.title"
