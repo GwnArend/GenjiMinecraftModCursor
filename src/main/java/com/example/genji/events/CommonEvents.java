@@ -159,7 +159,8 @@ public class CommonEvents {
                                 data.getDashCooldown(),
                                 data.getDeflectCooldown(),
                                 data.getBladeCastTicks(),
-                                data.getBladeSheatheTicks()
+                                data.getBladeSheatheTicks(),
+                                data.getNanoBoostTicks()
                         ),
                         sp.connection.connection,
                         net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT

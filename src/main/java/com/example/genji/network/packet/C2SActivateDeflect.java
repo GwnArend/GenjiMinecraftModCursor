@@ -27,9 +27,9 @@ public class C2SActivateDeflect {
                 data.markSynced();
                 ModNetwork.CHANNEL.sendTo(
                         new S2CSyncGenjiData(
-                                data.getUlt(), data.getBladeTicks(), data.getDeflectTicks(),
+                                data.getUlt(), data.getNano(), data.getBladeTicks(), data.getDeflectTicks(),
                                 data.getDashCooldown(), data.getDeflectCooldown(),
-                                data.getBladeCastTicks(), data.getBladeSheatheTicks()
+                                data.getBladeCastTicks(), data.getBladeSheatheTicks(), data.getNanoBoostTicks()
                         ),
                         sp.connection.connection,
                         net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT
@@ -41,9 +41,9 @@ public class C2SActivateDeflect {
                     data.markSynced();
                     ModNetwork.CHANNEL.sendTo(
                             new S2CSyncGenjiData(
-                                    data.getUlt(), data.getBladeTicks(), data.getDeflectTicks(),
+                                    data.getUlt(), data.getNano(), data.getBladeTicks(), data.getDeflectTicks(),
                                     data.getDashCooldown(), data.getDeflectCooldown(),
-                                    data.getBladeCastTicks(), data.getBladeSheatheTicks()
+                                    data.getBladeCastTicks(), data.getBladeSheatheTicks(), data.getNanoBoostTicks()
                             ),
                             sp.connection.connection,
                             net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT

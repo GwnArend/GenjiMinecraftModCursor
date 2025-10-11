@@ -20,14 +20,20 @@ public class S2CSyncGenjiData {
     private final int deflectCooldown;
     private final int bladeCastTicks;
     private final int bladeSheatheTicks;
+    private final int nanoBoostTicks; // NEW: Nano active timer
 
     /** Legacy (no nano). */
     public S2CSyncGenjiData(int ult, int bladeTicks, int deflectTicks, int dashCooldown, int deflectCooldown, int bladeCastTicks, int bladeSheatheTicks) {
-        this(ult, 0, bladeTicks, deflectTicks, dashCooldown, deflectCooldown, bladeCastTicks, bladeSheatheTicks);
+        this(ult, 0, bladeTicks, deflectTicks, dashCooldown, deflectCooldown, bladeCastTicks, bladeSheatheTicks, 0);
     }
 
     /** Full (with nano). */
     public S2CSyncGenjiData(int ult, int nano, int bladeTicks, int deflectTicks, int dashCooldown, int deflectCooldown, int bladeCastTicks, int bladeSheatheTicks) {
+        this(ult, nano, bladeTicks, deflectTicks, dashCooldown, deflectCooldown, bladeCastTicks, bladeSheatheTicks, 0);
+    }
+
+    /** Full (with nano and nanoBoostTicks). */
+    public S2CSyncGenjiData(int ult, int nano, int bladeTicks, int deflectTicks, int dashCooldown, int deflectCooldown, int bladeCastTicks, int bladeSheatheTicks, int nanoBoostTicks) {
         this.ult = ult;
         this.nano = nano;
         this.bladeTicks = bladeTicks;
@@ -36,6 +42,7 @@ public class S2CSyncGenjiData {
         this.deflectCooldown = deflectCooldown;
         this.bladeCastTicks = bladeCastTicks;
         this.bladeSheatheTicks = bladeSheatheTicks;
+        this.nanoBoostTicks = nanoBoostTicks;
     }
 
     public S2CSyncGenjiData(FriendlyByteBuf buf) {
@@ -47,6 +54,7 @@ public class S2CSyncGenjiData {
         this.deflectCooldown = buf.readVarInt();
         this.bladeCastTicks = buf.readVarInt();
         this.bladeSheatheTicks = buf.readVarInt();
+        this.nanoBoostTicks = buf.readVarInt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
@@ -58,12 +66,14 @@ public class S2CSyncGenjiData {
         buf.writeVarInt(deflectCooldown);
         buf.writeVarInt(bladeCastTicks);
         buf.writeVarInt(bladeSheatheTicks);
+        buf.writeVarInt(nanoBoostTicks);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> ctx) {
         ctx.get().enqueueWork(() -> {
             // Set nano explicitly, then use legacy update() for the rest
             ClientGenjiData.nano = Math.max(0, Math.min(100, nano));
+            ClientGenjiData.nanoBoostTicks = Math.max(0, nanoBoostTicks);
             ClientGenjiData.update(ult, bladeTicks, deflectTicks, dashCooldown, deflectCooldown, bladeCastTicks, bladeSheatheTicks);
         });
         ctx.get().setPacketHandled(true);

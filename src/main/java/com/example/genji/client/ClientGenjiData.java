@@ -19,6 +19,7 @@ public final class ClientGenjiData {
     public static int deflectCooldown = 0;
     public static int bladeCastTicks = 0;
     public static int bladeSheatheTicks = 0;
+    public static int nanoBoostTicks = 0; // NEW: Nano-Boost active timer
 
     private static int lastDashCooldown = 0;
     private static int lastDeflectTicks = 0;
@@ -62,6 +63,7 @@ public final class ClientGenjiData {
     public static boolean isSheathing()   { return bladeSheatheTicks > 0; }
     public static boolean isCasting()     { return bladeCastTicks > 0; }
     public static boolean ultReady()      { return ult >= 100 && !isBladeActive() && !isCasting() && !isSheathing(); }
+    public static boolean isNanoActive()  { return nanoBoostTicks > 0; }
 
     private static int clamp01(int v) { return v < 0 ? 0 : Math.min(100, v); }
 }

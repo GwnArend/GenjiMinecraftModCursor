@@ -78,9 +78,9 @@ public class C2SActivateDash {
             // Sync HUD/FX right away (dashCooldown, etc.)
             ModNetwork.CHANNEL.sendTo(
                     new S2CSyncGenjiData(
-                            data.getUlt(), data.getBladeTicks(), data.getDeflectTicks(),
+                            data.getUlt(), data.getNano(), data.getBladeTicks(), data.getDeflectTicks(),
                             data.getDashCooldown(), data.getDeflectCooldown(),
-                            data.getBladeCastTicks(), data.getBladeSheatheTicks()
+                            data.getBladeCastTicks(), data.getBladeSheatheTicks(), data.getNanoBoostTicks()
                     ),
                     sp.connection.connection,
                     NetworkDirection.PLAY_TO_CLIENT

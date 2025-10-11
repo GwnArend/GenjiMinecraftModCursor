@@ -1,0 +1,10 @@
+{
+  "animation": {
+    "frametime": 2
+  },
+  "texture": {
+    "blur": true,
+    "clamp": true,
+    "mipmaps": []
+  }
+}

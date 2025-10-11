@@ -78,7 +78,8 @@ public class C2SActivateBlade {
                                 data.getDashCooldown(),
                                 data.getDeflectCooldown(),
                                 data.getBladeCastTicks(),
-                                data.getBladeSheatheTicks()
+                                data.getBladeSheatheTicks(),
+                                data.getNanoBoostTicks()
                         ),
                         sp.connection.connection,
                         NetworkDirection.PLAY_TO_CLIENT
