@@ -52,7 +52,12 @@ public final class DashAbility {
     /** Called from packet to start a dash if cooldown allows. */
     public static void startDash(ServerPlayer sp, boolean bladeActive) {
         var data = GenjiDataProvider.get(sp);
+        boolean cancelDeflect = data.isDeflectActive();
         if (!data.tryDash()) return; // cooldown gate
+
+        if (cancelDeflect) {
+            data.cancelDeflectStartCooldown(); // emulate manual deflect cancel
+        }
 
         // Compute endpoint along crosshair up to RANGE, stop just before collision
         Vec3 eye = sp.getEyePosition();

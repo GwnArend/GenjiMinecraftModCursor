@@ -1,6 +1,7 @@
 package com.example.genji.client.hud;
 
 import com.example.genji.client.ClientGenjiData;
+import com.example.genji.config.GenjiConfig;
 import com.example.genji.registry.ModItems;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -59,14 +60,16 @@ public final class AbilityHud {
         // --- Deflect ---
         String deflectRight;
         int deflectFillNow, deflectFillTotal;
+        int deflectDurationTotal = Math.max(1, GenjiConfig.secToTicksClamped(GenjiConfig.DEFLECT_MAX_DURATION_SECONDS));
+        int deflectCooldownTotal = Math.max(1, GenjiConfig.secToTicksClamped(GenjiConfig.DEFLECT_COOLDOWN_SECONDS));
         if (ClientGenjiData.deflectTicks > 0) {
             deflectRight   = fmtTicks(ClientGenjiData.deflectTicks);
-            deflectFillNow = ClientGenjiData.deflectTicks;
-            deflectFillTotal = 40; // default display
+            deflectFillTotal = deflectDurationTotal;
+            deflectFillNow = Math.min(deflectFillTotal, ClientGenjiData.deflectTicks);
         } else if (ClientGenjiData.deflectCooldown > 0) {
             deflectRight   = fmtTicks(ClientGenjiData.deflectCooldown);
-            deflectFillNow = ClientGenjiData.deflectCooldown;
-            deflectFillTotal = Math.max(ClientGenjiData.deflectCooldown, 60);
+            deflectFillTotal = deflectCooldownTotal;
+            deflectFillNow = Math.min(deflectFillTotal, ClientGenjiData.deflectCooldown);
         } else {
             deflectRight = "READY";
             deflectFillNow = 0;
