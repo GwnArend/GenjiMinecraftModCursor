@@ -1,6 +1,8 @@
 package com.example.genji.config;
 
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
 
 public final class GenjiConfig {
     private GenjiConfig() {}
@@ -111,13 +113,13 @@ public final class GenjiConfig {
         DRAGONBLADE_REACH   = b.defineInRange("Reach",          3.2, 0.0, 64.0);
         DRAGONBLADE_WIDTH   = b.defineInRange("Width",          2.6, 0.0, 64.0);
         DRAGONBLADE_HEIGHT  = b.defineInRange("Height",         2.4, 0.0, 64.0);
-        DAMAGE_PER_DRAGONBLADE_SWING = b.defineInRange("DamagePerSwing", 8.8, 0.0, 1_000_000.0); // Overwatch scaling: 110 HP → 8.8 HP
+        DAMAGE_PER_DRAGONBLADE_SWING = b.defineInRange("DamagePerSwing", 11.0, 0.0, 1_000_000.0); // Dragonblade swing: 11.0 HP
         b.pop();
 
         // Damage Values (Overwatch Scaling)
         b.push("DamageValues");
-        SHURIKEN_DAMAGE_PER_STAR = b.defineInRange("ShurikenDamagePerStar", 2.16, 0.0, 100.0); // Overwatch: 27 HP → 2.16 HP
-        DASH_DAMAGE = b.defineInRange("DashDamage", 4.0, 0.0, 100.0); // Overwatch: 50 HP → 4.0 HP
+        SHURIKEN_DAMAGE_PER_STAR = b.defineInRange("ShurikenDamagePerStar", 2.7, 0.0, 100.0); // Shuriken: 2.7 HP per star
+        DASH_DAMAGE = b.defineInRange("DashDamage", 5.0, 0.0, 100.0); // Dash: 5.0 HP
         b.pop();
 
         // Nano-Boost
@@ -131,7 +133,8 @@ public final class GenjiConfig {
         NANO_SPEED_AMPLIFIER          = b.defineInRange("Effects.SpeedAmplifier",          1,  -1, 10);
         NANO_RESISTANCE_AMPLIFIER     = b.defineInRange("Effects.ResistanceAmplifier",     1,  -1, 10);
         NANO_FIRE_RES_AMPLIFIER       = b.defineInRange("Effects.FireResistanceAmplifier", 0,  -1, 10);
-        NANO_ABSORPTION_AMPLIFIER     = b.defineInRange("Effects.AbsorptionAmplifier",     1,  -1, 10);
+        // Absorption adds 4 health (2 hearts) per level: amplifier 4 = 20 health (10 hearts)
+        NANO_ABSORPTION_AMPLIFIER     = b.defineInRange("Effects.AbsorptionAmplifier",     4,  -1, 10);
         NANO_INSTANT_HEALTH_AMPLIFIER = b.defineInRange("Effects.InstantHealthAmplifier",  1,   0, 10);
         b.pop();
 
@@ -149,4 +152,43 @@ public final class GenjiConfig {
     // Helpers
     public static int secToTicks(int seconds) { return seconds <= 0 ? 0 : seconds * 20; }
     public static int secToTicksClamped(ForgeConfigSpec.IntValue secondsValue) { return secToTicks(secondsValue.get()); }
+
+    // === Config lifecycle hooks ===
+    public static void onLoad(final ModConfigEvent.Loading event) {
+        if (event.getConfig().getSpec() == SPEC) {
+            migrateDamageDefaults(event.getConfig());
+        }
+    }
+
+    public static void onReload(final ModConfigEvent.Reloading event) {
+        if (event.getConfig().getSpec() == SPEC) {
+            migrateDamageDefaults(event.getConfig());
+        }
+    }
+
+    private static void migrateDamageDefaults(ModConfig config) {
+        boolean changed = false;
+
+        double shuriken = SHURIKEN_DAMAGE_PER_STAR.get();
+        if (Math.abs(shuriken - 2.16) < 1e-3) {
+            SHURIKEN_DAMAGE_PER_STAR.set(2.7);
+            changed = true;
+        }
+
+        double dash = DASH_DAMAGE.get();
+        if (Math.abs(dash - 4.0) < 1e-3) {
+            DASH_DAMAGE.set(5.0);
+            changed = true;
+        }
+
+        double blade = DAMAGE_PER_DRAGONBLADE_SWING.get();
+        if (Math.abs(blade - 8.8) < 1e-3) {
+            DAMAGE_PER_DRAGONBLADE_SWING.set(11.0);
+            changed = true;
+        }
+
+        if (changed) {
+            config.save();
+        }
+    }
 }
