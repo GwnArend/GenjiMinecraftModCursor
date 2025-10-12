@@ -153,7 +153,7 @@ public class ShurikenEntity extends ThrowableItemProjectile implements GeoEntity
             
             var owner = getOwner();
             DamageSource src = owner instanceof LivingEntity le ? damageSources().thrown(this, le) : damageSources().generic();
-            hit.getEntity().hurt(src, GenjiConfig.SHURIKEN_DAMAGE_PER_STAR.get().floatValue()); // Overwatch scaling: 27 HP → 2.16 HP
+            hit.getEntity().hurt(src, GenjiConfig.SHURIKEN_DAMAGE_PER_STAR.get().floatValue()); // Shuriken damage (configurable)
             
             // Play hit sound
             var random = level().getRandom();

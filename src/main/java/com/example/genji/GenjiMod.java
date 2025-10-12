@@ -25,6 +25,8 @@ public class GenjiMod {
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, GenjiConfig.SPEC, "genji-common.toml");
 
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        modBus.addListener(GenjiConfig::onLoad);
+        modBus.addListener(GenjiConfig::onReload);
 
         // DeferredRegisters
         ModItems.REGISTER.register(modBus);

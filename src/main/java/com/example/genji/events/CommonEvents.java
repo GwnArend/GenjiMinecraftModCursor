@@ -187,12 +187,29 @@ public class CommonEvents {
             return;
         }
 
-        // Disable vanilla hitreg for shurikens only (dragonblade now uses vanilla sword mechanics)
+        // Disable vanilla hitreg for shurikens only (dragonblade handled in custom system below)
         boolean shurikenHit = e.getSource().getDirectEntity() instanceof ShurikenEntity;
         
         if (shurikenHit) {
             // Bypass invulnerability frames for shurikens only
             e.getEntity().invulnerableTime = 0;
+        }
+
+        // Suppress vanilla/Better Combat dragonblade melee damage; our custom LOS damage will apply instead.
+        if (attacker != null) {
+            var item = attacker.getMainHandItem();
+            boolean isDragonblade = !item.isEmpty() && item.getItem() instanceof com.example.genji.content.DragonbladeItem;
+            if (isDragonblade) {
+                var data = com.example.genji.capability.GenjiDataProvider.get(attacker);
+                if (data.isBladeActive()) {
+                    // Allow our own custom hits and dash hits through, cancel others
+                    if (!com.example.genji.events.DragonbladeCombat.isInternalDragonbladeDamage()
+                            && !com.example.genji.events.DashAbility.isInternalDashDamage()) {
+                        e.setCanceled(true);
+                        return;
+                    }
+                }
+            }
         }
 
         final float raw = e.getAmount();

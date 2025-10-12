@@ -32,9 +32,13 @@ public final class DashAbility {
     private static final double RANGE = 15.0;         // blocks
     private static final int    DURATION_TICKS = 8;  // more steps = smoother (no easing)
     private static final double HIT_RADIUS = 1.5;    // dash hit cylinder half-width
-    private static float getDamage() { return GenjiConfig.DASH_DAMAGE.get().floatValue(); } // Overwatch scaling: 50 HP → 4.0 HP
+    private static float getDamage() { return GenjiConfig.DASH_DAMAGE.get().floatValue(); } // Dash damage (configurable)
 
     private static final Map<UUID, DashState> ACTIVE = new HashMap<>();
+
+    // Marks damage that originates from our dash so other hooks can avoid canceling it
+    private static final ThreadLocal<Boolean> INTERNAL_DASH_DAMAGE = ThreadLocal.withInitial(() -> false);
+    public static boolean isInternalDashDamage() { return Boolean.TRUE.equals(INTERNAL_DASH_DAMAGE.get()); }
 
     private record DashState(Vec3 start, Vec3 end, int total, int tick, Set<UUID> hit) {
         DashState advance() { return new DashState(start, end, total, tick + 1, hit); }
@@ -159,6 +163,8 @@ public final class DashAbility {
         if (targets.isEmpty()) return;
 
         DamageSource src = level.damageSources().playerAttack(sp);
+        INTERNAL_DASH_DAMAGE.set(true);
+        try {
         for (Entity e : targets) {
             if (!e.isAlive()) continue;
             
@@ -185,6 +191,9 @@ public final class DashAbility {
                     );
                 });
             }
+        }
+        } finally {
+            INTERNAL_DASH_DAMAGE.set(false);
         }
     }
 

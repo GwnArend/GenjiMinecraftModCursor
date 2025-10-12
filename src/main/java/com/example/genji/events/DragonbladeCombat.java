@@ -1,6 +1,7 @@
 package com.example.genji.events;
 
 import com.example.genji.capability.GenjiDataProvider;
+import com.example.genji.config.GenjiConfig;
 import com.example.genji.content.DragonbladeItem;
 import com.example.genji.registry.ModSounds;
 import com.example.genji.network.ModNetwork;
@@ -23,6 +24,11 @@ public final class DragonbladeCombat {
     private static final Set<UUID> HELD_PRIMARY   = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> HELD_SECONDARY = ConcurrentHashMap.newKeySet();
     private static final Set<UUID> STARTUP_IN_PROGRESS = ConcurrentHashMap.newKeySet();
+
+    // Marks damage that originates from our custom dragonblade LOS routine so we can
+    // suppress vanilla/Better Combat duplicate damage in event hooks.
+    private static final ThreadLocal<Boolean> INTERNAL_DRAGONBLADE_DAMAGE = ThreadLocal.withInitial(() -> false);
+    public static boolean isInternalDragonbladeDamage() { return Boolean.TRUE.equals(INTERNAL_DRAGONBLADE_DAMAGE.get()); }
 
     // Combo window: 0.5 seconds (10 ticks) AFTER recovery completes to chain LEFT -> RIGHT
     private static final int COMBO_WINDOW_TICKS = 10;
@@ -111,8 +117,8 @@ public final class DragonbladeCombat {
             // Trigger third-person player swing animation
             sp.swing(sp.getUsedItemHand());
             
-            // Trigger attack - Better Combat will handle third-person animations and damage
-            triggerAttack(sp);
+        // Always use our custom LOS-based damage to ensure consistent tuning.
+        triggerAttack(sp);
             
             // Play our custom sound
             float pitch = 0.9f + sp.getRandom().nextFloat() * 0.2f;
@@ -175,9 +181,11 @@ public final class DragonbladeCombat {
         var data = GenjiDataProvider.get(sp);
         boolean nanoboostActive = data.isNanoActive();
         float damageMultiplier = nanoboostActive ? 1.5f : 1.0f; // +50% damage with nanoboost
-        float baseDamage = 8.8f; // Base dragonblade damage
+        float baseDamage = GenjiConfig.DAMAGE_PER_DRAGONBLADE_SWING.get().floatValue(); // Configurable base damage
         float finalDamage = baseDamage * damageMultiplier;
         
+        INTERNAL_DRAGONBLADE_DAMAGE.set(true);
+        try {
         for (LivingEntity entity : entities) {
             Vec3 entityPos = entity.getEyePosition();
             Vec3 toEntity = entityPos.subtract(playerPos);
@@ -202,6 +210,9 @@ public final class DragonbladeCombat {
             
             // Apply damage
             entity.hurt(level.damageSources().playerAttack(sp), finalDamage);
+        }
+        } finally {
+            INTERNAL_DRAGONBLADE_DAMAGE.set(false);
         }
     }
 

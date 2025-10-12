@@ -6,6 +6,7 @@ import com.example.genji.client.anim.FPDeflectAnim;
 import com.example.genji.client.fx.DragonbladeFxState;
 import com.example.genji.client.render.PerspectiveAwareDragonbladeRenderer;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
+import com.example.genji.config.GenjiConfig;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SwordItem;
@@ -85,9 +86,8 @@ public class DragonbladeItem extends SwordItem implements GeoItem {
     
     @Override
     public float getDamage() {
-        // Dragonblade base damage: 8.80 HP (4.4 hearts)
-        // This is equivalent to a diamond sword (7 damage) + 1.8
-        return 8.8f;
+        // Dragonblade base damage sourced from config (default 11.0 HP)
+        return GenjiConfig.DAMAGE_PER_DRAGONBLADE_SWING.get().floatValue();
     }
     
 
