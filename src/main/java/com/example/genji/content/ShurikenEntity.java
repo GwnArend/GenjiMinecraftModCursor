@@ -156,14 +156,7 @@ public class ShurikenEntity extends ThrowableItemProjectile implements GeoEntity
             hit.getEntity().hurt(src, GenjiConfig.SHURIKEN_DAMAGE_PER_STAR.get().floatValue()); // Shuriken damage (configurable)
             
             // Play hit sound
-            var random = level().getRandom();
-            var tridentSounds = new net.minecraft.sounds.SoundEvent[]{
-                net.minecraft.sounds.SoundEvents.TRIDENT_HIT,
-                net.minecraft.sounds.SoundEvents.TRIDENT_HIT_GROUND,
-                net.minecraft.sounds.SoundEvents.TRIDENT_RETURN
-            };
-            var selectedSound = tridentSounds[random.nextInt(tridentSounds.length)];
-            playSound(selectedSound, 0.5f, 1.2f);
+            playSound(net.minecraft.sounds.SoundEvents.TRIDENT_HIT, 0.5f, 1.2f);
             
             // Disappear on hit
             discard();

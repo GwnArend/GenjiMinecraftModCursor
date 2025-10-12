@@ -10,6 +10,7 @@ import com.example.genji.network.packet.S2CSyncGenjiData;
 import com.example.genji.network.packet.S2CPlayHitSound;
 import com.example.genji.registry.ModItems;
 import com.example.genji.registry.ModSounds;
+import com.example.genji.util.AdvancementHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -19,6 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -91,6 +93,13 @@ public class CommonEvents {
             // === Blade CAST -> ACTIVE
             if (prevCast > 0 && data.getBladeCastTicks() == 0 && data.getBladeTicks() == 0) {
                 data.activateBlade();
+
+                if (p instanceof ServerPlayer spCombo && data.isNanoActive()) {
+                    AdvancementHelper.grantAdvancement(
+                            spCombo,
+                            ResourceLocation.fromNamespaceAndPath("genji", "nano_blade_combo")
+                    );
+                }
 
                 // Edge case: ending cue at start if total active <= 5s
                 final int fiveSeconds = 5 * 20;

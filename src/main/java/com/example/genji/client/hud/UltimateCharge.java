@@ -22,12 +22,12 @@ public final class UltimateCharge {
     private UltimateCharge() {}
 
     // Outer ring (Ultimate)
-    private static final int OUTER_R_OUT = 36;
-    private static final int OUTER_R_IN  = 26;
+    private static final int OUTER_R_OUT = 27;
+    private static final int OUTER_R_IN  = 20;
 
     // Inner ring (Nano) – modestly larger
-    private static final int INNER_R_OUT = 26;
-    private static final int INNER_R_IN  = 20;
+    private static final int INNER_R_OUT = 20;
+    private static final int INNER_R_IN  = 15;
 
     private static final int TXT_COLOR        = 0xFFFFFFFF;
     private static final int BG_COLOR         = 0xAA202020;
@@ -51,7 +51,7 @@ public final class UltimateCharge {
         int sh = event.getWindow().getGuiScaledHeight();
 
         int cx = sw / 2;
-        int cy = sh - 58;
+        int cy = sh - 70;
 
         GuiGraphics g = event.getGuiGraphics();
 
