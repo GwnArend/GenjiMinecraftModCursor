@@ -43,7 +43,7 @@ public class ShurikenItem extends Item implements GeoItem {
         public Pending(String kind) { this.kind = kind; }
     }
 
-    @OnlyIn(Dist.CLIENT)
+    // Keep the map available on both dists; client guards prevent server access.
     private static final Long2ObjectOpenHashMap<Pending> PENDING = new Long2ObjectOpenHashMap<>();
 
     public ShurikenItem(Properties props) { super(props); }
